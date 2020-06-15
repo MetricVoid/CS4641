@@ -93,14 +93,8 @@ def linreg_closed_form(train_X, train_Y):
 	Returns:
 		A length D+1 numpy array with the optimal parameters	
 	'''
-	Theta = None # TODO: compute the closed form solution here. Note: using numpy.linalg.lstsq(...) is *not* the correct answer
-	train_X = add_bias_feature(train_X)
-    if not type(train_Y) == numpy.matrix:
-        train_Y = numpy.matrix(train_Y).T
-    elif train_Y.shape[0] == 1:  # creating a column vector
-        train_Y = train_Y.T
-    Theta = train_X * train_Y
-    return Theta
+	Theta = numpy.dot(numpy.dot(numpy.linalg.inv(numpy.dot(numpy.transpose(train_X),train_X)),numpy.transpose(train_X)),train_Y) # TODO: compute the closed form solution here. Note: using numpy.linalg.lstsq(...) is *not* the correct answer
+	return Theta
 
 ###################
 # YOUR CODE BELOW #
@@ -120,6 +114,10 @@ def loss(Theta, train_X, train_Y):
 		The (scalar) loss for the given parameters and data.
 	'''
 	rv = None # TODO: compute the loss here.
+	sum=0
+	for i in range(len(train_X)):
+		sum=sum+(numpy.square(numpy.dot(numpy.transpose(train_X[i]),Theta)-train_Y[i]))
+	rv=sum/(2*len(train_X))
 	return rv
 
 ###################
@@ -149,6 +147,7 @@ def linreg_grad_desc(initial_Theta, train_X, train_Y, alpha=0.05, num_iters=500,
 		if print_iters:
 			print("Iteration: {} , Loss: {} , Theta: {}".format(k,cur_loss,cur_Theta))
 		#TODO: Add update equation here
+		cur_Theta=cur_Theta-0.1*loss(cur_Theta,train_X,train_Y)
 	return step_history
 
 def apply_RFF_transform(X,Omega,B):
@@ -222,5 +221,10 @@ def vis_rff_model(train_X, train_Y, Theta, Omega, B):
 	plot_helper(train_X, train_Y, sample_X, sample_Y)
 
 if __name__ == '__main__':
-	data_X, data_Y = load_data('2D-noisy-lin.txt')
+	# data_X, data_Y = load_data('2D-noisy-lin.txt')
+	data_X, data_Y = load_data('1D-no-noise-lin.txt')
+	theta=linreg_closed_form(data_X, data_Y)
+	print(theta)
+	rv=loss(theta, data_X, data_Y)
+	print("loss is",rv)
 	plot_helper(data_X, data_Y)
