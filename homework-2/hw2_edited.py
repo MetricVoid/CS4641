@@ -80,6 +80,11 @@ def vis_linreg_model(train_X, train_Y, Theta):
 ###################
 # YOUR CODE BELOW #
 ###################
+def prepend_with_ones(x):
+	[n,d]=numpy.shape(x)
+	x_alt=numpy.insert(x,[0],numpy.ones((n,1)),axis=1)
+	return x_alt
+	
 def linreg_closed_form(train_X, train_Y):
 	'''
 	Computes the optimal parameters for the given training data in closed form
@@ -93,7 +98,8 @@ def linreg_closed_form(train_X, train_Y):
 	Returns:
 		A length D+1 numpy array with the optimal parameters	
 	'''
-	Theta = numpy.dot(numpy.dot(numpy.linalg.inv(numpy.dot(numpy.transpose(train_X),train_X)),numpy.transpose(train_X)),train_Y) # TODO: compute the closed form solution here. Note: using numpy.linalg.lstsq(...) is *not* the correct answer
+	Theta=numpy.linalg.inv(numpy.transpose(prepend_with_ones(train_X)).dot(prepend_with_ones(train_X))).dot(numpy.transpose(prepend_with_ones(train_X))).dot(train_Y)
+	# Theta = numpy.dot(numpy.dot(numpy.linalg.inv(numpy.dot(numpy.transpose(x),x)),numpy.transpose(x)),train_Y) # TODO: compute the closed form solution here. Note: using numpy.linalg.lstsq(...) is *not* the correct answer
 	return Theta
 
 ###################
@@ -114,10 +120,14 @@ def loss(Theta, train_X, train_Y):
 		The (scalar) loss for the given parameters and data.
 	'''
 	rv = None # TODO: compute the loss here.
-	sum=0
-	for i in range(len(train_X)):
-		sum=sum+(numpy.square(numpy.dot(numpy.transpose(train_X[i]),Theta)-train_Y[i]))
-	rv=sum/(2*len(train_X))
+	# for i in range(len(train_X)):
+	# 	sum=sum+(numpy.square(numpy.dot(numpy.transpose(train_X[i]),Theta)-train_Y[i]))
+	# rv=sum/(2*len(train_X))
+	[n,d]=numpy.shape(train_X)
+	x=numpy.insert(train_X,[0],numpy.ones((n,1)),axis=1)
+	h=numpy.dot(x,Theta)
+	h=numpy.reshape(h,(n,1))
+	rv=sum(numpy.square(h-train_Y))/2/n
 	return rv
 
 ###################
@@ -222,9 +232,31 @@ def vis_rff_model(train_X, train_Y, Theta, Omega, B):
 
 if __name__ == '__main__':
 	# data_X, data_Y = load_data('2D-noisy-lin.txt')
+	# # data_X, data_Y = load_data('1D-no-noise-lin.txt')
+	# theta=linreg_closed_form(data_X, data_Y)
+	# print(theta)
+	# rv=loss(theta, data_X, data_Y)
+	# print("loss is",rv)
+	# plot_helper(data_X, data_Y)
+	# import data for two dimension examples, choose one for each test
 	data_X, data_Y = load_data('1D-no-noise-lin.txt')
-	theta=linreg_closed_form(data_X, data_Y)
-	print(theta)
-	rv=loss(theta, data_X, data_Y)
-	print("loss is",rv)
-	plot_helper(data_X, data_Y)
+	# data_X, data_Y = load_data('2D-noisy-lin.txt')
+
+	# we add ones here, or you could add it inside the functions
+	ones = numpy.ones((data_X.shape[0], 1))
+
+	X = numpy.concatenate((ones, data_X), axis=1)
+	Theta = linreg_closed_form(X, data_Y)
+
+	# test by the python library function
+	theoretical_theta, theoretical_loss, _, _ = numpy.linalg.lstsq(X, data_Y, rcond=1)
+	theoretical_loss = theoretical_loss / (2 * data_Y.shape[0])
+
+	Theta = linreg_closed_form(X, data_Y)
+	Loss = loss(Theta, X, data_Y)
+
+	print('\nClosed form theta: ', Theta.T)
+	# vis_linreg_model(data_X, data_Y, Theta)
+	# you may need to change the given vis_linreg_model() to the 3D case. Feel free to let us know if you are not confident about how to change it.
+	# vis_linreg_model_3d(data_X, data_Y, Theta)
+
